@@ -16,8 +16,10 @@ import {
   Clock3,
   TrendingUp,
   Palmtree,
+  UserMinus,
+  AlertTriangle,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { formatCPF, formatPhone, formatDate } from "@/lib/masks";
 import Modal from "@/components/Modal";
@@ -129,8 +131,19 @@ const getBirthdateValue = (
 
 export default function ColaboradorDataPage() {
   const { id } = useParams();
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
+
+  // Controle de permissão para demissão (somente hosts ADMIN/DP/RH)
+  const [isHost, setIsHost] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Estados do fluxo de demissão
+  const [showDismissModal, setShowDismissModal] = useState(false);
+  const [dismissJustification, setDismissJustification] = useState("");
+  const [dismissSubmitting, setDismissSubmitting] = useState(false);
+  const [dismissError, setDismissError] = useState<string | null>(null);
 
   const [collaborator, setCollaborators] = useState<CollaboratorData | null>(
     null,
@@ -896,6 +909,48 @@ export default function ColaboradorDataPage() {
     }
   };
 
+  const fetchAuth = async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setIsHost(json.data.role === "ADMIN");
+        setCurrentUserId(json.data.id || null);
+      }
+    } catch {
+      // Silencia erro; botão de demissão permanece oculto por padrão
+    }
+  };
+
+  const handleDismiss = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const justification = dismissJustification.trim();
+    if (!justification) {
+      setDismissError("A justificativa é obrigatória.");
+      return;
+    }
+
+    try {
+      setDismissSubmitting(true);
+      setDismissError(null);
+      const res = await fetch(`/api/colaboradores/${id}/dismiss`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ justification }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        router.push("/colaboradores?tab=demissoes");
+      } else {
+        setDismissError(json.message || "Erro ao processar a demissão.");
+      }
+    } catch {
+      setDismissError("Erro de conexão ao processar a demissão.");
+    } finally {
+      setDismissSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       fetchCollaboratorData();
@@ -903,6 +958,7 @@ export default function ColaboradorDataPage() {
       fetchVacationData();
       fetchPerformanceData();
     }
+    fetchAuth();
   }, [id]);
 
   if (loading) {
@@ -1047,7 +1103,7 @@ export default function ColaboradorDataPage() {
           )}
         </div>
         {/* Editar informação */}
-        <div className="flex w-full md:w-auto justify-center md:justify-start self-center md:self-start mt-4 md:mt-0">
+        <div className="flex flex-col gap-2 w-full md:w-auto justify-center md:justify-start self-center md:self-start mt-4 md:mt-0">
           <button
             onClick={() => setIsModal(true)}
             className="bg-stone-50/50 p-4 rounded-2xl border border-stone-100 hover:bg-stone-50 transition-all shadow-sm text-sm flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer"
@@ -1055,6 +1111,19 @@ export default function ColaboradorDataPage() {
             <Pencil className="h-4 w-4 text-stone-800" />
             Editar dados
           </button>
+          {isHost && currentUserId && currentUserId !== id && (
+            <button
+              onClick={() => {
+                setDismissError(null);
+                setDismissJustification("");
+                setShowDismissModal(true);
+              }}
+              className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 hover:bg-rose-50 transition-all shadow-sm text-sm flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer text-rose-600 font-semibold"
+            >
+              <UserMinus className="h-4 w-4 text-rose-600" />
+              Demitir
+            </button>
+          )}
         </div>
       </div>
 
@@ -1693,6 +1762,88 @@ export default function ColaboradorDataPage() {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* ================= MODAL DE CONFIRMAÇÃO DE DEMISSÃO ================= */}
+      {showDismissModal && (
+        <Modal
+          isOpen={showDismissModal}
+          onClose={() => setShowDismissModal(false)}
+          title="Confirmar Demissão"
+          maxWidth="max-w-lg"
+        >
+          <form
+            onSubmit={handleDismiss}
+            className="flex flex-col gap-5 max-h-[85vh]"
+          >
+            {/* Aviso */}
+            <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+              <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-rose-700 leading-relaxed">
+                <p className="font-bold text-rose-800 mb-1">
+                  Esta ação é irreversível
+                </p>
+                <p>
+                  O colaborador{" "}
+                  <span className="font-bold">{collaborator?.name}</span> será
+                  removido do sistema junto com todos os seus dados (férias,
+                  folgas, escalas, ponto, documentos e notificações). Apenas um
+                  registro com o nome, setor, justificativa e data será
+                  mantido.
+                </p>
+              </div>
+            </div>
+
+            {/* Justificativa */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-stone-600 uppercase tracking-wider">
+                Justificativa da demissão *
+              </label>
+              <textarea
+                rows={4}
+                value={dismissJustification}
+                onChange={(e) => setDismissJustification(e.target.value)}
+                placeholder="Descreva o motivo da demissão (ex: encerramento de contrato, desempenho, pedido de demissão...)"
+                className="w-full p-3 border border-stone-200/80 rounded-xl text-sm text-stone-800 focus:outline-none focus:border-rose-400 resize-none"
+              />
+            </div>
+
+            {/* Erro */}
+            {dismissError && (
+              <p className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2">
+                {dismissError}
+              </p>
+            )}
+
+            {/* Ações */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setShowDismissModal(false)}
+                className="flex-1 py-2.5 border border-stone-200 hover:bg-stone-50 text-stone-600 font-semibold rounded-xl text-xs cursor-pointer text-center transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={dismissSubmitting}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs cursor-pointer text-center transition-all shadow-md shadow-rose-500/10 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {dismissSubmitting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Demitindo...
+                  </>
+                ) : (
+                  <>
+                    <UserMinus className="h-3.5 w-3.5" />
+                    Confirmar Demissão
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </SectionComponent>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   CheckCircle,
-  MessageCircleMore,
   UserCircle2,
   LucideSettings,
   Clock,
@@ -402,19 +401,12 @@ export default function CollaboratorDashboard() {
           <ArrowRight size={14} className="text-blue-500" />
           Acesso Rápido
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link href="/ponto" className="group p-5 bg-white rounded-2xl border border-stone-100/60 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
             <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0"><CheckCircle size={20} /></div>
             <div className="min-w-0">
               <p className="text-sm font-bold text-stone-800 group-hover:text-blue-600 transition-colors">Ponto</p>
               <p className="text-[10px] text-stone-400">Registrar jornada</p>
-            </div>
-          </Link>
-          <Link href="/chat" className="group p-5 bg-white rounded-2xl border border-stone-100/60 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all shrink-0"><MessageCircleMore size={20} /></div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-stone-800 group-hover:text-blue-600 transition-colors">Chat</p>
-              <p className="text-[10px] text-stone-400">Conversas</p>
             </div>
           </Link>
           <Link href="/perfil" className="group p-5 bg-white rounded-2xl border border-stone-100/60 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">

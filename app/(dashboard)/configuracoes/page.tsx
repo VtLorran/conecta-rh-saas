@@ -3,20 +3,14 @@
 import React, { useState, useEffect } from "react";
 import {
   Palette,
-  Globe,
   Bell,
-  Accessibility,
   Lock,
   Zap,
   HelpCircle,
   Info,
   Building2,
   User,
-  LogOut,
   Laptop,
-  Sun,
-  Moon,
-  Check,
   X,
   ChevronRight,
   Shield,
@@ -84,31 +78,18 @@ export default function SettingsPage() {
   };
 
   // --- ESTADOS DE APARÊNCIA ---
-  const [theme, setTheme] = useState<string>("auto");
   const [fontSize, setFontSize] = useState<string>("medium");
   const [sidebarPref, setSidebarPref] = useState<string>("default");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Aparência
-      setTheme(localStorage.getItem("theme-preference") || "auto");
-      setFontSize(localStorage.getItem("font-size-preference") || "medium");
+      // Aparência (fonte legada "large" cai para "medium")
+      const savedFontSize = localStorage.getItem("font-size-preference") || "medium";
+      setFontSize(savedFontSize === "large" ? "medium" : savedFontSize);
       setSidebarPref(localStorage.getItem("sidebar-preference") || "default");
-      
-      // Idioma e Região
-      setLanguage(localStorage.getItem("language-preference") || "pt-BR");
-      setCountry(localStorage.getItem("country-preference") || "Brasil");
-      setTimezone(localStorage.getItem("timezone-preference") || "America/Sao_Paulo");
-      setDateFormat(localStorage.getItem("date-format-preference") || "DD/MM/YYYY");
-      setTimeFormat(localStorage.getItem("time-format-preference") || "24h");
-      setNumberFormat(localStorage.getItem("number-format-preference") || "dot-comma");
 
       // Notificações
       setNotificationsEnabled(localStorage.getItem("notifications-preference") !== "false");
-
-      // Acessibilidade
-      setHighContrast(localStorage.getItem("high-contrast-preference") === "true");
-      setKeyboardFocus(localStorage.getItem("keyboard-focus-preference") === "true");
 
       // Preferências
       setConfirmDelete(localStorage.getItem("confirm-delete-preference") !== "false");
@@ -133,10 +114,6 @@ export default function SettingsPage() {
     fetchCompanyData();
   }, []);
 
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-  };
-
   const handleFontSizeChange = (newSize: string) => {
     setFontSize(newSize);
   };
@@ -146,7 +123,6 @@ export default function SettingsPage() {
   };
 
   const handleSaveAppearance = () => {
-    localStorage.setItem("theme-preference", theme);
     localStorage.setItem("font-size-preference", fontSize);
     localStorage.setItem("sidebar-preference", sidebarPref);
     window.dispatchEvent(new Event("appearance-pref-changed"));
@@ -154,27 +130,9 @@ export default function SettingsPage() {
     showToast("Configurações de aparência salvas com sucesso!", "success");
   };
 
-  const handleSaveLocale = () => {
-    localStorage.setItem("language-preference", language);
-    localStorage.setItem("country-preference", country);
-    localStorage.setItem("timezone-preference", timezone);
-    localStorage.setItem("date-format-preference", dateFormat);
-    localStorage.setItem("time-format-preference", timeFormat);
-    localStorage.setItem("number-format-preference", numberFormat);
-    window.dispatchEvent(new Event("locale-pref-changed"));
-    showToast("Configurações de idioma e região salvas com sucesso!", "success");
-  };
-
   const handleSaveNotifications = () => {
     localStorage.setItem("notifications-preference", String(notificationsEnabled));
     showToast("Preferências de notificação salvas com sucesso!", "success");
-  };
-
-  const handleSaveAccessibility = () => {
-    localStorage.setItem("high-contrast-preference", String(highContrast));
-    localStorage.setItem("keyboard-focus-preference", String(keyboardFocus));
-    window.dispatchEvent(new Event("accessibility-pref-changed"));
-    showToast("Preferências de acessibilidade salvas com sucesso!", "success");
   };
 
   const handleSavePreferences = () => {
@@ -185,20 +143,8 @@ export default function SettingsPage() {
     showToast("Preferências salvas com sucesso!", "success");
   };
 
-  // --- ESTADOS DE IDIOMA E REGIÃO ---
-  const [language, setLanguage] = useState<string>("pt-BR");
-  const [country, setCountry] = useState<string>("Brasil");
-  const [timezone, setTimezone] = useState<string>("America/Sao_Paulo");
-  const [dateFormat, setDateFormat] = useState<string>("DD/MM/YYYY");
-  const [timeFormat, setTimeFormat] = useState<string>("24h");
-  const [numberFormat, setNumberFormat] = useState<string>("dot-comma");
-
   // --- ESTADO DE NOTIFICAÇÕES ---
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
-
-  // --- ESTADOS DE ACESSIBILIDADE ---
-  const [highContrast, setHighContrast] = useState<boolean>(false);
-  const [keyboardFocus, setKeyboardFocus] = useState<boolean>(false);
 
   // --- ESTADO DE SEGURANÇA (SESSÕES ATIVAS) ---
   const [sessions, setSessions] = useState<Session[]>([
@@ -335,23 +281,10 @@ export default function SettingsPage() {
   // --- MODAL DE SEGURANÇA (ENCERRAR SESSÕES) ---
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
 
-  // Formatar prévia da data com base no formato escolhido
-  const getFormattedDatePreview = () => {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, "0");
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const year = today.getFullYear();
-    if (dateFormat === "DD/MM/YYYY") return `${day}/${month}/${year}`;
-    if (dateFormat === "MM/DD/YYYY") return `${month}/${day}/${year}`;
-    return `${year}-${month}-${day}`;
-  };
-
   // Definição das abas das configurações
   const tabs = [
-    { id: "aparencia", label: "Aparência", icon: Palette, desc: "Tema, fontes e sidebar" },
-    { id: "idioma", label: "Idioma e Região", icon: Globe, desc: "Padrões de exibição" },
+    { id: "aparencia", label: "Aparência", icon: Palette, desc: "Fontes e sidebar" },
     { id: "notificacoes", label: "Notificações", icon: Bell, desc: "Avisos da plataforma" },
-    { id: "acessibilidade", label: "Acessibilidade", icon: Accessibility, desc: "Recursos de inclusão" },
     { id: "seguranca", label: "Segurança", icon: Lock, desc: "Sessões e proteção" },
     { id: "preferencias", label: "Preferências", icon: Zap, desc: "Comportamento do sistema" },
     { id: "suporte", label: "Suporte", icon: HelpCircle, desc: "Ajuda e chamados" },
@@ -388,7 +321,7 @@ export default function SettingsPage() {
       {/* Titulo com TittleHeader */}
       <TittleHeader 
         tittle="Configurações" 
-        description="Personalize sua experiência, gerencie contas, defina padrões regionais e acesse ferramentas de suporte." 
+        description="Personalize sua experiência, gerencie contas e acesse ferramentas de suporte." 
         className="w-full"
       />
 
@@ -482,69 +415,11 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                {/* Grid Temas */}
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-stone-700 block">Tema do sistema</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    
-                    {/* Claro */}
-                    <button
-                      type="button"
-                      onClick={() => handleThemeChange("light")}
-                      className={`flex flex-col items-center justify-between p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200
-                        ${theme === "light" 
-                          ? "border-blue-500 bg-blue-50/20 shadow-sm" 
-                          : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                        }`}
-                    >
-                      <div className="w-full aspect-[4/3] bg-stone-100 border border-stone-200 rounded-xl flex items-center justify-center relative overflow-hidden mb-3">
-                        <Sun className="h-8 w-8 text-amber-500 animate-spin-slow" />
-                        <div className="absolute bottom-1 right-1 bg-white border border-stone-200 h-4 w-12 rounded-sm" />
-                      </div>
-                      <span className="text-sm font-semibold text-stone-800">Claro</span>
-                    </button>
-
-                    {/* Escuro */}
-                    <button
-                      type="button"
-                      onClick={() => handleThemeChange("dark")}
-                      className={`flex flex-col items-center justify-between p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200
-                        ${theme === "dark" 
-                          ? "border-blue-500 bg-blue-50/20 shadow-sm" 
-                          : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                        }`}
-                    >
-                      <div className="w-full aspect-[4/3] bg-stone-900 border border-stone-800 rounded-xl flex items-center justify-center relative overflow-hidden mb-3">
-                        <Moon className="h-8 w-8 text-indigo-400" />
-                        <div className="absolute bottom-1 right-1 bg-stone-950 border border-stone-800 h-4 w-12 rounded-sm" />
-                      </div>
-                      <span className="text-sm font-semibold text-stone-800">Escuro</span>
-                    </button>
-
-                    {/* Automático */}
-                    <button
-                      type="button"
-                      onClick={() => handleThemeChange("auto")}
-                      className={`flex flex-col items-center justify-between p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200
-                        ${theme === "auto" 
-                          ? "border-blue-500 bg-blue-50/20 shadow-sm" 
-                          : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                        }`}
-                    >
-                      <div className="w-full aspect-[4/3] bg-gradient-to-r from-stone-100 to-stone-950 border border-stone-200 rounded-xl flex items-center justify-center relative overflow-hidden mb-3">
-                        <Laptop className="h-8 w-8 text-stone-500 bg-white/70 p-1 rounded-full border border-stone-200" />
-                      </div>
-                      <span className="text-sm font-semibold text-stone-800">Automático</span>
-                    </button>
-
-                  </div>
-                </div>
-
                 {/* Seleção de Tamanho de Fonte */}
-                <div className="space-y-3 pt-4 border-t border-stone-100">
+                <div className="space-y-3">
                   <label className="text-sm font-semibold text-stone-700 block">Tamanho da fonte</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {["small", "medium", "large"].map(size => (
+                  <div className="grid grid-cols-2 gap-3">
+                    {["small", "medium"].map(size => (
                       <button
                         key={size}
                         type="button"
@@ -557,7 +432,6 @@ export default function SettingsPage() {
                       >
                         {size === "small" && <span className="text-xs">Aa (Pequena)</span>}
                         {size === "medium" && <span className="text-sm">Aa (Média)</span>}
-                        {size === "large" && <span className="text-base">Aa (Grande)</span>}
                       </button>
                     ))}
                   </div>
@@ -611,143 +485,6 @@ export default function SettingsPage() {
               </form>
             )}
 
-            {activeTab === "idioma" && (
-              <form onSubmit={(e) => { e.preventDefault(); handleSaveLocale(); }} className="space-y-6 flex-1">
-                <div>
-                  <h2 className="text-lg font-bold text-stone-850 flex items-center gap-2 border-b border-stone-100 pb-3">
-                    🌎 Idioma e Região
-                  </h2>
-                  <p className="text-sm text-stone-500 mt-1">
-                    Defina seu idioma preferido, seu fuso horário e a exibição de formatos de data, hora e números.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Idioma */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-stone-700 block">Idioma do sistema</label>
-                    <select
-                      value={language}
-                      onChange={e => setLanguage(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-stone-200/80 bg-stone-100 text-sm text-stone-800 font-semibold focus:outline-none focus:border-blue-500 cursor-not-allowed"
-                      disabled
-                    >
-                      <option value="pt-BR">Português (Brasil)</option>
-                    </select>
-                  </div>
-
-                  {/* Região */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-stone-700 block">País de origem</label>
-                    <InputField
-                      type="text"
-                      value={country}
-                      onChange={e => setCountry(e.target.value)}
-                      placeholder="Ex: Brasil"
-                      classNameInput="text-sm font-semibold text-stone-800"
-                      classNameDiv="py-2.5 px-3 bg-white"
-                    />
-                  </div>
-
-                  {/* Fuso Horário */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-stone-700 block">Fuso horário</label>
-                    <select
-                      value={timezone}
-                      onChange={e => setTimezone(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-stone-200/80 bg-white text-sm text-stone-800 font-semibold focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="America/Sao_Paulo">Brasília (GMT-3) - America/Sao_Paulo</option>
-                      <option value="America/Manaus">Manaus (GMT-4) - America/Manaus</option>
-                      <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
-                      <option value="UTC">Tempo Universal Coordenado (UTC)</option>
-                    </select>
-                  </div>
-
-                  {/* Formato de data */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-stone-700 block">Formato da data</label>
-                    <select
-                      value={dateFormat}
-                      onChange={e => setDateFormat(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-stone-200/80 bg-white text-sm text-stone-800 font-semibold focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="DD/MM/YYYY">Dia/Mês/Ano (DD/MM/AAAA)</option>
-                      <option value="MM/DD/YYYY">Mês/Dia/Ano (MM/DD/AAAA)</option>
-                      <option value="YYYY-MM-DD">Ano-Mês-Dia (AAAA-MM-DD)</option>
-                    </select>
-                  </div>
-
-                  {/* Formato de Hora */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-stone-700 block">Formato da hora</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setTimeFormat("24h")}
-                        className={`p-3 rounded-xl border text-sm font-semibold cursor-pointer transition-all
-                          ${timeFormat === "24h" ? "border-blue-500 bg-blue-50/30 text-blue-600" : "border-stone-200 text-stone-700"}`}
-                      >
-                        24 Horas (14:30)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTimeFormat("12h")}
-                        className={`p-3 rounded-xl border text-sm font-semibold cursor-pointer transition-all
-                          ${timeFormat === "12h" ? "border-blue-500 bg-blue-50/30 text-blue-600" : "border-stone-200 text-stone-700"}`}
-                      >
-                        12 Horas (02:30 PM)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Formato numérico */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-stone-700 block">Formato numérico</label>
-                    <select
-                      value={numberFormat}
-                      onChange={e => setNumberFormat(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-stone-200/80 bg-white text-sm text-stone-800 font-semibold focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="dot-comma">Ponto/Vírgula (Ex: 1.000,50)</option>
-                      <option value="comma-dot">Vírgula/Ponto (Ex: 1,000.50)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Caixa de Visualização dos Formatos */}
-                <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200/60 mt-4 space-y-2">
-                  <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wider">Prévia de Exibição Local</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
-                    <div>
-                      <span className="text-[11px] block text-stone-400">Data de Hoje</span>
-                      <span className="text-sm font-bold text-stone-800">{getFormattedDatePreview()}</span>
-                    </div>
-                    <div>
-                      <span className="text-[11px] block text-stone-400">Hora Atual</span>
-                      <span className="text-sm font-bold text-stone-800">
-                        {timeFormat === "24h" ? "14:32" : "02:32 PM"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[11px] block text-stone-400">Salário Exemplo</span>
-                      <span className="text-sm font-bold text-stone-800">
-                        {numberFormat === "dot-comma" ? "R$ 4.500,00" : "R$ 4,500.00"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Salvar Botão */}
-                <div className="pt-6 border-t border-stone-100 flex justify-end">
-                  <SubmitButton
-                    text="Salvar Idioma e Região"
-                    className="!w-auto !py-2.5 !px-6 rounded-xl font-bold text-xs shadow-sm cursor-pointer"
-                  />
-                </div>
-              </form>
-            )}
-
             {/* ================= NOTIFICAÇÕES ================= */}
             {activeTab === "notificacoes" && (
               <form onSubmit={(e) => { e.preventDefault(); handleSaveNotifications(); }} className="space-y-6 flex-1">
@@ -791,7 +528,7 @@ export default function SettingsPage() {
                     <div>
                       <p className="font-semibold">Recomendado manter ativado</p>
                       <p className="text-blue-700/90 mt-0.5">
-                        As notificações internas avisam sobre a aprovação de novos documentos enviados por colaboradores, solicitações de ponto e avisos de novos canais de chat.
+                        As notificações internas avisam sobre a aprovação de novos documentos enviados por colaboradores e solicitações de ponto.
                       </p>
                     </div>
                   </div>
@@ -802,69 +539,6 @@ export default function SettingsPage() {
                 <div className="pt-6 border-t border-stone-100 flex justify-end">
                   <SubmitButton
                     text="Salvar Notificações"
-                    className="!w-auto !py-2.5 !px-6 rounded-xl font-bold text-xs shadow-sm cursor-pointer"
-                  />
-                </div>
-
-              </form>
-            )}
-
-            {/* ================= ACESSIBILIDADE ================= */}
-            {activeTab === "acessibilidade" && (
-              <form onSubmit={(e) => { e.preventDefault(); handleSaveAccessibility(); }} className="space-y-6 flex-1">
-                <div>
-                  <h2 className="text-lg font-bold text-stone-850 flex items-center gap-2 border-b border-stone-100 pb-3">
-                    ♿ Acessibilidade
-                  </h2>
-                  <p className="text-sm text-stone-500 mt-1">
-                    Ajuste os parâmetros visuais e operacionais da plataforma para uma navegação confortável.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  
-                  {/* Item 1: Alto contraste */}
-                  <div className="flex items-center justify-between p-4 bg-stone-50/50 rounded-2xl border border-stone-100">
-                    <div>
-                      <span className="text-sm font-bold text-stone-800 block">Alto Contraste</span>
-                      <span className="text-xs text-stone-400 block mt-0.5">
-                        Aumenta o contraste das cores de fundo e textos para leitura aprimorada.
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setHighContrast(!highContrast)}
-                      className={`relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
-                        ${highContrast ? "bg-blue-600" : "bg-stone-200"}`}
-                    >
-                      <span className={`pointer-events-none inline-block h-5.5 w-5.5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${highContrast ? "translate-x-5.5" : "translate-x-0"}`} />
-                    </button>
-                  </div>
-
-                  {/* Item 3: Melhorar foco */}
-                  <div className="flex items-center justify-between p-4 bg-stone-50/50 rounded-2xl border border-stone-100">
-                    <div>
-                      <span className="text-sm font-bold text-stone-800 block">Melhorar foco para navegação por teclado</span>
-                      <span className="text-xs text-stone-400 block mt-0.5">
-                        Adiciona bordas largas e bem visíveis ao redor do elemento focado via tabulação.
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setKeyboardFocus(!keyboardFocus)}
-                      className={`relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
-                        ${keyboardFocus ? "bg-blue-600" : "bg-stone-200"}`}
-                    >
-                      <span className={`pointer-events-none inline-block h-5.5 w-5.5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${keyboardFocus ? "translate-x-5.5" : "translate-x-0"}`} />
-                    </button>
-                  </div>
-
-                </div>
-
-                {/* Salvar Botão */}
-                <div className="pt-6 border-t border-stone-100 flex justify-end">
-                  <SubmitButton
-                    text="Salvar Acessibilidade"
                     className="!w-auto !py-2.5 !px-6 rounded-xl font-bold text-xs shadow-sm cursor-pointer"
                   />
                 </div>
@@ -1608,10 +1282,9 @@ export default function SettingsPage() {
               <div className="relative pl-5 border-l-2 border-blue-500">
                 <div className="absolute -left-1.5 top-1.5 h-3.5 w-3.5 rounded-full bg-blue-500 border-2 border-white" />
                 <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">v1.0.0 (BETA) - Junho 2026</span>
-                <h4 className="text-sm font-bold text-stone-800 mt-1">Lançamento Geral do Ponto e Chat</h4>
+                <h4 className="text-sm font-bold text-stone-800 mt-1">Lançamento Geral do Ponto Eletrônico</h4>
                 <ul className="text-xs text-stone-500 mt-2 space-y-1.5 list-disc list-inside leading-relaxed">
                   <li>Implementação do módulo **Ponto Eletrônico** com Kiosk Totem QR Code e área do colaborador para registro seguro via câmera.</li>
-                  <li>Início do canal de **Chat corporativo** integrado com mensagens temporárias de 3 dias no banco.</li>
                   <li>Criação de visualizadores e formulários de cadastro para novas contratações (**Admissões**).</li>
                   <li>Melhoria na velocidade do carregamento da dashboard de administração.</li>
                 </ul>

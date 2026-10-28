@@ -24,11 +24,6 @@ const templates = [
     link: "/ponto"
   },
   {
-    title: "Nova Mensagem no Chat 💬",
-    description: "Você recebeu uma mensagem direta de Ana Silva (Recursos Humanos) referente ao envio de documentos.",
-    link: "/chat"
-  },
-  {
     title: "Documento Assinado com Sucesso 📄",
     description: "O contrato de trabalho atualizado da sua equipe foi assinado por todas as partes e está disponível.",
     link: "/documentos"
@@ -42,11 +37,6 @@ const templates = [
     title: "Planejamento de Férias Atualizado 🌴",
     description: "Seu gestor direto iniciou o planejamento das suas férias coletivas previstas para o próximo semestre.",
     link: "/ponto"
-  },
-  {
-    title: "Mensagem no Canal Geral 📢",
-    description: "Foi postado um novo aviso importante para todos os colaboradores no canal #geral do chat corporativo.",
-    link: "/chat"
   }
 ];
 

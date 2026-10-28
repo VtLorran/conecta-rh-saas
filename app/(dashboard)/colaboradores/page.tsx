@@ -18,9 +18,11 @@ import {
   Layers,
   BarChart2,
   PieChart,
+  UserMinus,
 } from "lucide-react";
 import Link from "next/link";
 import CentralFerias from "./_components/CentralFerias";
+import CentralDemissoes from "./_components/CentralDemissoes";
 
 interface Collaborator {
   id: string;
@@ -76,6 +78,22 @@ export default function ColaboradoresPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [vacations, setVacations] = useState<Vacation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isHost, setIsHost] = useState(false);
+
+  useEffect(() => {
+    async function fetchRole() {
+      try {
+        const res = await fetch("/api/auth/me");
+        const json = await res.json();
+        if (json.success && json.data) {
+          setIsHost(json.data.role === "ADMIN");
+        }
+      } catch {
+        // Silencia erro; aba de demissões permanece oculta por padrão
+      }
+    }
+    fetchRole();
+  }, []);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -309,12 +327,16 @@ export default function ColaboradoresPage() {
         tittle={
           activeTab === "colaboradores"
             ? "Painel de Colaboradores"
-            : "Gestão Central de Férias"
+            : activeTab === "demissoes"
+              ? "Registro de Demissões"
+              : "Gestão Central de Férias"
         }
         description={
           activeTab === "colaboradores"
             ? "Gerencie a equipe, setores e acompanhe métricas corporativas"
-            : "Aprovação, registro e cronograma de férias de toda a empresa"
+            : activeTab === "demissoes"
+              ? "Histórico de colaboradores demitidos, com setor, justificativa e data"
+              : "Aprovação, registro e cronograma de férias de toda a empresa"
         }
         className="w-full"
       />
@@ -343,6 +365,19 @@ export default function ColaboradoresPage() {
           <Palmtree size={16} />
           Gestão de Férias
         </button>
+        {isHost && (
+          <button
+            onClick={() => handleTabChange("demissoes")}
+            className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap px-1 flex items-center gap-2 ${
+              activeTab === "demissoes"
+                ? "border-rose-500 text-rose-500"
+                : "border-transparent text-stone-400 hover:text-stone-650"
+            }`}
+          >
+            <UserMinus size={16} />
+            Demissões
+          </button>
+        )}
       </div>
 
       {activeTab === "colaboradores" ? (
@@ -729,6 +764,9 @@ export default function ColaboradoresPage() {
             )}
           </div>
         </div>
+      ) : activeTab === "demissoes" ? (
+        // Componente de Demissões Integrado (somente hosts)
+        <CentralDemissoes />
       ) : (
         // Componente Férias Integrado
         <CentralFerias />

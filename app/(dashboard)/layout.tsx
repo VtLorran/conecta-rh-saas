@@ -55,7 +55,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!loading && user && user.role !== "ADMIN") {
-      const allowedRoutes = ["/dashboard", "/chat", "/ponto", "/perfil", "/configuracoes", "/notificacoes", "/ferias", "/folgas", "/escala", "/onboarding"];
+      const allowedRoutes = ["/dashboard", "/ponto", "/perfil", "/configuracoes", "/notificacoes", "/ferias", "/folgas", "/escala", "/onboarding"];
       if (pathname === "/") {
         router.replace("/dashboard");
       } else if (!allowedRoutes.some(route => pathname === route || pathname.startsWith(route + "/"))) {
@@ -88,38 +88,18 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
-    const applyTheme = (t: string) => {
-      const root = document.documentElement;
-      if (t === "dark") {
-        root.classList.add("dark");
-      } else if (t === "light") {
-        root.classList.remove("dark");
-      } else {
-        // Auto
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        if (systemTheme === "dark") {
-          root.classList.add("dark");
-        } else {
-          root.classList.remove("dark");
-        }
-      }
-    };
-
     const applyFontSize = (s: string) => {
       const root = document.documentElement;
       root.classList.remove("font-size-small", "font-size-medium", "font-size-large");
-      root.classList.add(`font-size-${s}`);
+      // O tema é fixo (claro). A fonte "large" foi descontinuada e cai para "medium".
+      root.classList.add(`font-size-${s === "large" ? "medium" : s}`);
     };
 
     // Load initial
-    const savedTheme = localStorage.getItem("theme-preference") || "auto";
-    const savedFontSize = localStorage.getItem("font-size-preference") || "medium";
-    applyTheme(savedTheme);
-    applyFontSize(savedFontSize);
+    applyFontSize(localStorage.getItem("font-size-preference") || "medium");
 
     // Listen to real-time events
     const handlePrefChange = () => {
-      applyTheme(localStorage.getItem("theme-preference") || "auto");
       applyFontSize(localStorage.getItem("font-size-preference") || "medium");
     };
 
@@ -270,7 +250,7 @@ export default function DashboardLayout({
     );
   }
 
-  const isAllowed = !user || user.role === "ADMIN" || ["/dashboard", "/chat", "/ponto", "/perfil", "/configuracoes", "/notificacoes", "/ferias", "/folgas", "/escala", "/onboarding"].some(route => pathname === route || pathname.startsWith(route + "/"));
+  const isAllowed = !user || user.role === "ADMIN" || ["/dashboard", "/ponto", "/perfil", "/configuracoes", "/notificacoes", "/ferias", "/folgas", "/escala", "/onboarding"].some(route => pathname === route || pathname.startsWith(route + "/"));
 
   return (
     <div className="flex min-h-screen w-full bg-[#EDEDED]">

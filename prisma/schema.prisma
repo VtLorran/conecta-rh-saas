@@ -52,8 +52,6 @@ model User {
   workSchedules      WorkSchedule[]      @relation("UserWorkSchedules")
   timeRecords        TimeRecord[]
   documentRequests   DocumentRequest[]
-  sentMessages       Message[]           @relation("SentMessages")
-  receivedMessages   Message[]           @relation("ReceivedMessages")
   notifications      Notification[]
 
   createdAt DateTime @default(now())
@@ -286,20 +284,7 @@ model Document {
   @@map("documents")
 }
 
-// 14. MENSAGENS DO CHAT (Temporárias)
-model Message {
-  id         String   @id @default(uuid())
-  senderId   String   @map("sender_id")
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiverId String   @map("receiver_id")
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  content    String
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  @@map("messages")
-}
-
-// 15. DADOS DA EMPRESA (Persistidos no Banco)
+// 14. DADOS DA EMPRESA (Persistidos no Banco)
 model CompanyData {
   id                 String   @id @default(uuid())
   razaoSocial        String
@@ -331,7 +316,7 @@ model CompanyData {
   @@map("company_data")
 }
 
-// 16. NOTIFICAÇÕES DO SISTEMA
+// 15. NOTIFICAÇÕES DO SISTEMA
 model Notification {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
@@ -343,4 +328,18 @@ model Notification {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("notifications")
+}
+
+// 16. DEMISSÕES (Registro leve / log append-only de colaboradores demitidos)
+// Sem relations e sem blobs de propósito: apenas snapshots em texto para não pesar no banco.
+model Termination {
+  id              String   @id @default(uuid())
+  employeeName    String   @map("employee_name") // snapshot do nome completo
+  sector          String                        // snapshot do setor onde estava
+  justification   String                        // motivo da demissão
+  dismissedByName String?  @map("dismissed_by_name") // snapshot de quem demitiu (host)
+  terminatedAt    DateTime @default(now()) @map("terminated_at")
+
+  @@index([terminatedAt])
+  @@map("terminations")
 }
