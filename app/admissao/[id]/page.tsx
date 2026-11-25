@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, CheckCircle2, XCircle, UploadCloud, FileText, ShieldAlert } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, UploadCloud, FileText, ShieldAlert, Megaphone, CalendarDays } from "lucide-react";
 import { formatCPF, formatPhone, formatDate } from "@/lib/masks";
 
 export default function CandidateAdmissionPage() {
@@ -14,6 +14,8 @@ export default function CandidateAdmissionPage() {
   const [success, setSuccess] = useState(false);
 
   const [candidateInfo, setCandidateInfo] = useState<any>(null);
+  const [muralPosts, setMuralPosts] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,6 +44,25 @@ export default function CandidateAdmissionPage() {
             });
           }
           setFormData(initialData);
+
+          try {
+            const [muralRes, calRes] = await Promise.all([
+              fetch(`/api/mural?admission=true&admissionId=${admissionId}`),
+              fetch(`/api/calendario?admissionId=${admissionId}&upcoming=true`),
+            ]);
+            const [muralJson, calJson] = await Promise.all([
+              muralRes.json(),
+              calRes.json(),
+            ]);
+            if (muralJson.success && Array.isArray(muralJson.data)) {
+              setMuralPosts(muralJson.data.slice(0, 3));
+            }
+            if (calJson.success && Array.isArray(calJson.data)) {
+              setUpcomingEvents(calJson.data.slice(0, 3));
+            }
+          } catch {
+            // Silencioso para não bloquear o formulário do candidato
+          }
         } else {
           setError(result.message || "Link inválido ou já processado.");
         }
@@ -222,6 +243,58 @@ export default function CandidateAdmissionPage() {
             <p className="text-sm font-semibold leading-relaxed bg-white/60 p-3 rounded-xl border border-amber-100/50">
               {candidateInfo.justification}
             </p>
+          </div>
+        )}
+
+        {(muralPosts.length > 0 || upcomingEvents.length > 0) && (
+          <div className="mb-6 p-5 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-4">
+            {muralPosts.length > 0 && (
+              <div className="space-y-2">
+                <h2 className="text-xs font-bold text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Megaphone className="h-4 w-4" />
+                  Mural da Empresa
+                </h2>
+                <div className="space-y-2">
+                  {muralPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-white/90 border border-blue-100/80 rounded-xl p-3"
+                    >
+                      <p className="text-sm font-bold text-gray-800">{post.title}</p>
+                      <p className="text-xs text-gray-600 mt-0.5 whitespace-pre-wrap">
+                        {post.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {upcomingEvents.length > 0 && (
+              <div className="space-y-2">
+                <h2 className="text-xs font-bold text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <CalendarDays className="h-4 w-4" />
+                  Próximos Eventos Corporativos
+                </h2>
+                <div className="space-y-1.5">
+                  {upcomingEvents.map((ev) => {
+                    const [y, m, d] = String(ev.eventDate).slice(0, 10).split("-");
+                    return (
+                      <div
+                        key={ev.id}
+                        className="bg-white/90 border border-blue-100/80 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="font-semibold text-gray-700 truncate">{ev.title}</span>
+                        <span className="font-bold text-blue-600 shrink-0">
+                          {d}/{m}/{y}
+                          {ev.startTime ? ` • ${ev.startTime}` : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

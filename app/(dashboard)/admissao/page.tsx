@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ReviewList } from "@/components/List";
-import { CheckCircle, File, RefreshCcw, Plus, Loader2, Send, UserRound } from "lucide-react";
+import { CheckCircle, File, RefreshCcw, Plus, Loader2, Send, UserRound, Megaphone, CalendarDays, ArrowRight, Clock } from "lucide-react";
+import Link from "next/link";
 import AdmissionModal from "@/components/AdmissionModal";
 import ManualUserModal from "@/components/ManualUserModal";
 
@@ -27,6 +28,22 @@ interface CurrentUser {
   role: string;
 }
 
+interface MuralPreviewPost {
+  id: string;
+  title: string;
+  content: string;
+  priority: string;
+  expiresAt: string;
+}
+
+interface CalendarPreviewEvent {
+  id: string;
+  title: string;
+  eventDate: string;
+  startTime: string | null;
+  category: string;
+}
+
 export default function AdmissaoPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats>({
@@ -38,6 +55,8 @@ export default function AdmissaoPage() {
   const [recentApprovals, setRecentApprovals] = useState<Candidate[]>([]);
   const [invitedCandidates, setInvitedCandidates] = useState<Candidate[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [muralPosts, setMuralPosts] = useState<MuralPreviewPost[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<CalendarPreviewEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
@@ -68,10 +87,31 @@ export default function AdmissaoPage() {
     }
   };
 
+  const fetchMuralAndCalendar = async () => {
+    try {
+      const [muralRes, calRes] = await Promise.all([
+        fetch("/api/mural"),
+        fetch("/api/calendario?upcoming=true"),
+      ]);
+      const [muralJson, calJson] = await Promise.all([
+        muralRes.json(),
+        calRes.json(),
+      ]);
+      if (muralJson.success && Array.isArray(muralJson.data)) {
+        setMuralPosts(muralJson.data.slice(0, 3));
+      }
+      if (calJson.success && Array.isArray(calJson.data)) {
+        setUpcomingEvents(calJson.data.slice(0, 4));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar mural/calendário na admissão:", error);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchDashboardData(), fetchCurrentUser()]);
+      await Promise.all([fetchDashboardData(), fetchCurrentUser(), fetchMuralAndCalendar()]);
       setLoading(false);
     };
     init();
@@ -86,7 +126,7 @@ export default function AdmissaoPage() {
         return "Hoje";
       }
 
-      
+
       const day = date.getDate();
       const monthNames = [
         "Jan",
@@ -393,13 +433,12 @@ function InvitedRow({
         <button
           onClick={handleResend}
           disabled={loading || statusText !== null}
-          className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-80 ${
-            statusText === "Enviado!"
+          className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer disabled:opacity-80 ${statusText === "Enviado!"
               ? "bg-green-50 text-green-700 border-green-200"
               : statusText?.startsWith("Erro")
-              ? "bg-red-50 text-red-700 border-red-200"
-              : "bg-stone-50 hover:bg-blue-50 hover:text-[#3B82F6] hover:border-blue-200 text-stone-600 border-stone-200 active:scale-95"
-          }`}
+                ? "bg-red-50 text-red-700 border-red-200"
+                : "bg-stone-50 hover:bg-blue-50 hover:text-[#3B82F6] hover:border-blue-200 text-stone-600 border-stone-200 active:scale-95"
+            }`}
         >
           {loading ? (
             <Loader2 className="h-3 w-3 animate-spin text-[#3B82F6]" />

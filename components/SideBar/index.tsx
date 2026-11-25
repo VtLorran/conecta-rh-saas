@@ -16,6 +16,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Megaphone,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -254,6 +255,12 @@ export default function SideBar({
                   icon={<LayoutDashboard />}
                   isCollapsed={isCollapsed}
                 />
+                <ButtonSideBar
+                  name="Mural"
+                  redirect="/mural"
+                  icon={<Megaphone />}
+                  isCollapsed={isCollapsed}
+                />
               </div>
 
               <div className="flex flex-col gap-2">
@@ -304,6 +311,12 @@ export default function SideBar({
                   name="DashBoard"
                   redirect="/"
                   icon={<LayoutDashboard />}
+                  isCollapsed={isCollapsed}
+                />
+                <ButtonSideBar
+                  name="Mural"
+                  redirect="/mural"
+                  icon={<Megaphone />}
                   isCollapsed={isCollapsed}
                 />
               </div>

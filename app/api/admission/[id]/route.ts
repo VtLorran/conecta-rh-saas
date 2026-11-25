@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bycript from "bcrypt";
 import { sendApprovalEmail, sendRefusedPermanentEmail, sendRefusedForCorrectionEmail } from "@/lib/mail";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   request: Request,
@@ -131,7 +132,7 @@ export async function PATCH(
 ) {
   try {
     const { id: admissionId } = await params;
-    const { status, action, justification } = await request.json();
+    const { status, action, justification, announceOnMural } = await request.json();
 
     if (status !== "ACTIVE" && status !== "REJECTED") {
       return NextResponse.json(
@@ -215,6 +216,24 @@ export async function PATCH(
         where: { id: admissionId },
         data: { status: "ACTIVE" },
       });
+
+      // 2.1 Publica boas-vindas no Mural se solicitado pelo RH
+      if (announceOnMural === true) {
+        const currentUser = await getCurrentUser();
+        const durationMinutes = 7 * 24 * 60;
+        await prisma.muralPost.create({
+          data: {
+            title: `Boas-vindas a ${admission.candidateName}!`,
+            content: `${admission.candidateName} acabou de concluir o processo de admissão e agora faz parte da equipe.`,
+            priority: "NORMAL",
+            durationMinutes,
+            expiresAt: new Date(Date.now() + durationMinutes * 60 * 1000),
+            showInAdmission: false,
+            authorId: currentUser?.id || admission.createdById,
+            authorName: currentUser?.name || "RH",
+          },
+        });
+      }
 
       // 2. Dispara e-mail de congratulação e login
       const loginLink = `${origin}/login`;

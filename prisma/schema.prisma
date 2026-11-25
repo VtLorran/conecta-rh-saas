@@ -53,6 +53,8 @@ model User {
   timeRecords        TimeRecord[]
   documentRequests   DocumentRequest[]
   notifications      Notification[]
+  muralPosts         MuralPost[]
+  corporateEvents    CorporateEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -342,4 +344,42 @@ model Termination {
 
   @@index([terminatedAt])
   @@map("terminations")
+}
+
+// 17. MURAL DE COMUNICAÇÃO (Com tempo ativo definido pelo host e exclusão física após expiração)
+model MuralPost {
+  id              String   @id @default(uuid())
+  title           String
+  content         String
+  priority        String   @default("NORMAL") // "NORMAL", "IMPORTANT", "URGENT"
+  durationMinutes Int      @map("duration_minutes")
+  expiresAt       DateTime @map("expires_at")
+  showInAdmission Boolean  @default(true) @map("show_in_admission")
+  authorId        String   @map("author_id")
+  author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorName      String   @map("author_name")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([expiresAt])
+  @@map("mural_posts")
+}
+
+// 18. MINI CALENDÁRIO CORPORATIVO (Eventos simples da empresa)
+model CorporateEvent {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  eventDate   DateTime @map("event_date")
+  startTime   String?  @map("start_time") // Ex: "14:00"
+  category    String   @default("EVENTO") // "EVENTO", "REUNIAO", "FERIADO", "INTEGRACAO"
+  createdById String   @map("created_by_id")
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([eventDate])
+  @@map("corporate_events")
 }

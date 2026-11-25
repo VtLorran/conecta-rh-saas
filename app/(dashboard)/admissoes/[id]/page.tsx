@@ -50,6 +50,7 @@ export default function ReviewAdmissionPage() {
   
   // Controle dos Modais de Confirmação
   const [showApproveModal, setShowApproveModal] = useState(false);
+  const [announceOnMural, setAnnounceOnMural] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectAction, setRejectAction] = useState<"CORRECTION" | "PERMANENT">("CORRECTION");
   const [justification, setJustification] = useState("");
@@ -590,6 +591,18 @@ export default function ReviewAdmissionPage() {
               </ul>
             </div>
 
+            <label className="flex items-center gap-2.5 cursor-pointer select-none px-1">
+              <input
+                type="checkbox"
+                checked={announceOnMural}
+                onChange={(e) => setAnnounceOnMural(e.target.checked)}
+                className="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
+              <span className="text-xs font-semibold text-stone-600">
+                Publicar boas-vindas no Mural de Comunicação (ativo por 7 dias)
+              </span>
+            </label>
+
             {modalError && (
               <div className="text-xs font-semibold text-red-700 bg-red-50 border border-red-100 p-3 rounded-xl">
                 {modalError}
@@ -617,7 +630,7 @@ export default function ReviewAdmissionPage() {
                     const response = await fetch(`/api/admission/${admissionId}`, {
                       method: "PATCH",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ status: "ACTIVE" }),
+                      body: JSON.stringify({ status: "ACTIVE", announceOnMural }),
                     });
                     const result = await response.json();
                     if (response.ok && result.success) {
